@@ -1,6 +1,13 @@
 include(${CMAKE_TRIPLET_FILE})
+if (VCPKG_LIBRARY_LINKAGE STREQUAL static)
+    message(FATAL_ERROR "Static building not supported yet")
+endif()
 include(vcpkg_common_functions)
 set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/mysql-server-mysql-5.7.16)
+
+if (EXISTS "${CURRENT_INSTALLED_DIR}/include/mysql.h")
+	message(FATAL_ERROR "FATAL ERROR: libmysql and libmariadb are incompatible.")
+endif()
 
 vcpkg_download_distfile(ARCHIVE
     URLS "https://github.com/mysql/mysql-server/archive/mysql-5.7.16.tar.gz"

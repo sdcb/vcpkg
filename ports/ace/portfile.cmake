@@ -1,15 +1,18 @@
+include(${CMAKE_TRIPLET_FILE})
+if (VCPKG_LIBRARY_LINKAGE STREQUAL static)
+    message(FATAL_ERROR "Static building not supported yet")
+endif()
 include(vcpkg_common_functions)
 set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/ACE_wrappers/ace)
 vcpkg_download_distfile(ARCHIVE
-    URL "http://download.dre.vanderbilt.edu/previous_versions/ACE-6.4.0.zip"
+    URLS "http://download.dre.vanderbilt.edu/previous_versions/ACE-6.4.0.zip"
     FILENAME "ACE-6.4.0.zip"
     SHA512 3543291332b96cf06a966dedda617169e8db051cebbbc4f05cdc2c2c9e7908174f8ed67bc152bbcd57541279d3addb1138f1fc092468e856c2bb04ee6ad2b95a
 )
 vcpkg_extract_source_archive(${ARCHIVE})
 
 if (TRIPLET_SYSTEM_ARCH MATCHES "arm")
-    message(FATAL_ERROR, "ARM is currently not supported.")
-    return()
+    message(FATAL_ERROR "ARM is currently not supported.")
 elseif (TRIPLET_SYSTEM_ARCH MATCHES "x86")
     set(MSBUILD_PLATFORM "Win32")
 else ()
