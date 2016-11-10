@@ -7,20 +7,15 @@ function(vcpkg_apply_patches)
         message(STATUS "Applying patch ${PATCH}")
         set(LOGNAME patch-${TARGET_TRIPLET}-${PATCHNUM})
         execute_process(
-            COMMAND ${GIT} --work-tree=. --git-dir=. apply "${PATCH}" --ignore-whitespace --whitespace=nowarn --verbose
+            COMMAND ${GIT} --work-tree=. --git-dir=.git apply "${PATCH}" --ignore-whitespace --whitespace=nowarn --verbose
             OUTPUT_FILE ${CURRENT_BUILDTREES_DIR}/${LOGNAME}-out.log
             ERROR_FILE ${CURRENT_BUILDTREES_DIR}/${LOGNAME}-err.log
             WORKING_DIRECTORY ${_ap_SOURCE_PATH}
             RESULT_VARIABLE error_code
         )
-        
+
         if(error_code)
-            message(STATUS
-                "Applying patch failed: ${GIT} --work-tree=. apply \"${PATCH}\" --ignore-whitespace --whitespace=nowarn --verbose\n"
-                "Working Directory: ${_ap_SOURCE_PATH}\n"
-                "See logs for more information:\n"
-                "    ${CURRENT_BUILDTREES_DIR}/${LOGNAME}-out.log\n"
-                "    ${CURRENT_BUILDTREES_DIR}/${LOGNAME}-err.log\n")
+            message(STATUS "Applying patch failed. This is expected if this patch was previously applied.")
         endif()
 
         message(STATUS "Applying patch ${PATCH} done")

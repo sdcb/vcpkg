@@ -1,6 +1,5 @@
 #include "vcpkg_Commands.h"
 #include "vcpkg_System.h"
-#include "vcpkg.h"
 
 namespace vcpkg
 {
@@ -86,6 +85,7 @@ namespace vcpkg
             {"import", import_command},
             {"cache", cache_command},
             {"internal_test", internal_test_command},
+            {"portsdiff", portsdiff_command}
         };
         return t;
     }

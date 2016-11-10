@@ -1,4 +1,3 @@
-include(${CMAKE_TRIPLET_FILE})
 include(vcpkg_common_functions)
 set(SOURCE_PATH ${CURRENT_BUILDTREES_DIR}/src/cpprestsdk-2.9.0)
 
@@ -12,7 +11,7 @@ vcpkg_extract_source_archive(${ARCHIVE})
 
 vcpkg_apply_patches(
     SOURCE_PATH ${SOURCE_PATH}
-    PATCHES 
+    PATCHES
         ${CMAKE_CURRENT_LIST_DIR}/0001_cmake.patch
 )
 
@@ -21,7 +20,7 @@ vcpkg_configure_cmake(
     OPTIONS
         -DBUILD_TESTS=OFF
         -DBUILD_SAMPLES=OFF
-        -DCPPREST_EXCLUDE_WEBSOCKETS=ON
+        -DCPPREST_EXCLUDE_WEBSOCKETS=OFF
     OPTIONS_DEBUG
         -DCASA_INSTALL_HEADERS=OFF
 )
@@ -32,7 +31,5 @@ file(INSTALL
     ${SOURCE_PATH}/license.txt
     DESTINATION ${CURRENT_PACKAGES_DIR}/share/cpprestsdk RENAME copyright)
 
-if(VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
-    vcpkg_copy_pdbs()
-endif()
+vcpkg_copy_pdbs()
 
