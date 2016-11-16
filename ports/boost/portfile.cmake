@@ -90,14 +90,14 @@ message(STATUS "Packaging headers")
 file(
     COPY ${SOURCE_PATH}/boost
     DESTINATION ${CURRENT_PACKAGES_DIR}/include
-    PATTERN "config/user.hpp" EXCLUDE
 )
-file(COPY ${SOURCE_PATH}/boost/config/user.hpp
-    DESTINATION ${CURRENT_PACKAGES_DIR}/include/boost/config/
-)
-file(APPEND ${CURRENT_PACKAGES_DIR}/include/boost/config/user.hpp
-    "\n#define BOOST_ALL_DYN_LINK\n"
-)
+
+if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
+    file(APPEND ${CURRENT_PACKAGES_DIR}/include/boost/config/user.hpp
+        "\n#define BOOST_ALL_DYN_LINK\n"
+    )
+endif()
+
 file(INSTALL ${SOURCE_PATH}/LICENSE_1_0.txt DESTINATION ${CURRENT_PACKAGES_DIR}/share/boost RENAME copyright)
 message(STATUS "Packaging headers done")
 
@@ -110,14 +110,14 @@ if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
         DESTINATION ${CURRENT_PACKAGES_DIR}/bin
         FILES_MATCHING PATTERN "*.dll")
 else()
-    # file(GLOB RELEASE_LIBS ${CURRENT_PACKAGES_DIR}/lib/libboost*.lib)
-    # foreach(LIB ${RELEASE_LIBS})
-    #     get_filename_component(OLD_FILENAME ${LIB} NAME)
-    #     get_filename_component(DIRECTORY_OF_LIB_FILE ${LIB} DIRECTORY)
-    #     string(REPLACE "libboost_" "boost_" NEW_FILENAME ${OLD_FILENAME})
-    #     string(REPLACE "-s-" "-" NEW_FILENAME ${NEW_FILENAME})
-    #     file(RENAME ${DIRECTORY_OF_LIB_FILE}/${OLD_FILENAME} ${DIRECTORY_OF_LIB_FILE}/${NEW_FILENAME})
-    # endforeach()
+    file(GLOB RELEASE_LIBS ${CURRENT_PACKAGES_DIR}/lib/libboost*.lib)
+    foreach(LIB ${RELEASE_LIBS})
+        get_filename_component(OLD_FILENAME ${LIB} NAME)
+        get_filename_component(DIRECTORY_OF_LIB_FILE ${LIB} DIRECTORY)
+        string(REPLACE "libboost_" "boost_" NEW_FILENAME ${OLD_FILENAME})
+        string(REPLACE "-s-" "-" NEW_FILENAME ${NEW_FILENAME})
+        file(RENAME ${DIRECTORY_OF_LIB_FILE}/${OLD_FILENAME} ${DIRECTORY_OF_LIB_FILE}/${NEW_FILENAME})
+    endforeach()
 endif()
 message(STATUS "Packaging ${TARGET_TRIPLET}-rel done")
 
@@ -130,14 +130,14 @@ if (VCPKG_LIBRARY_LINKAGE STREQUAL dynamic)
         DESTINATION ${CURRENT_PACKAGES_DIR}/debug/bin
         FILES_MATCHING PATTERN "*.dll")
 else()
-    # file(GLOB DEBUG_LIBS ${CURRENT_PACKAGES_DIR}/debug/lib/libboost*.lib)
-    # foreach(LIB ${DEBUG_LIBS})
-    #     get_filename_component(OLD_FILENAME ${LIB} NAME)
-    #     get_filename_component(DIRECTORY_OF_LIB_FILE ${LIB} DIRECTORY)
-    #     string(REPLACE "libboost_" "boost_" NEW_FILENAME ${OLD_FILENAME})
-    #     string(REPLACE "-sgd-" "-gd-" NEW_FILENAME ${NEW_FILENAME})
-    #     file(RENAME ${DIRECTORY_OF_LIB_FILE}/${OLD_FILENAME} ${DIRECTORY_OF_LIB_FILE}/${NEW_FILENAME})
-    # endforeach()
+    file(GLOB DEBUG_LIBS ${CURRENT_PACKAGES_DIR}/debug/lib/libboost*.lib)
+    foreach(LIB ${DEBUG_LIBS})
+        get_filename_component(OLD_FILENAME ${LIB} NAME)
+        get_filename_component(DIRECTORY_OF_LIB_FILE ${LIB} DIRECTORY)
+        string(REPLACE "libboost_" "boost_" NEW_FILENAME ${OLD_FILENAME})
+        string(REPLACE "-sgd-" "-gd-" NEW_FILENAME ${NEW_FILENAME})
+        file(RENAME ${DIRECTORY_OF_LIB_FILE}/${OLD_FILENAME} ${DIRECTORY_OF_LIB_FILE}/${NEW_FILENAME})
+    endforeach()
 endif()
 message(STATUS "Packaging ${TARGET_TRIPLET}-dbg done")
 
