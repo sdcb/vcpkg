@@ -54,13 +54,13 @@ namespace vcpkg { namespace COFFFileReader
         fs.seekg(offset_to_PE_signature + PE_SIGNATURE_SIZE, ios_base::beg);
     }
 
-    static fpos_t align_to(const fpos_t unaligned_offset, const int alignment_size)
+    static fpos_t align_to_size(const uint64_t unaligned, const uint64_t alignment_size)
     {
-        fpos_t aligned_offset = unaligned_offset - 1;
-        aligned_offset /= alignment_size;
-        aligned_offset += 1;
-        aligned_offset *= alignment_size;
-        return aligned_offset;
+        fpos_t aligned = unaligned - 1;
+        aligned /= alignment_size;
+        aligned += 1;
+        aligned *= alignment_size;
+        return aligned;
     }
 
     struct coff_file_header
@@ -72,14 +72,6 @@ namespace vcpkg { namespace COFFFileReader
             coff_file_header ret;
             ret.data.resize(HEADER_SIZE);
             fs.read(&ret.data[0], HEADER_SIZE);
-            return ret;
-        }
-
-        static coff_file_header peek(fstream& fs)
-        {
-            auto original_pos = fs.tellg().seekpos();
-            coff_file_header ret = read(fs);
-            fs.seekg(original_pos);
             return ret;
         }
 
@@ -129,15 +121,51 @@ namespace vcpkg { namespace COFFFileReader
 
         uint64_t member_size() const
         {
+            static const size_t ALIGNMENT_SIZE = 2;
+
             static const size_t HEADER_SIZE_OFFSET = 48;
             static const size_t HEADER_SIZE_FIELD_SIZE = 10;
             const std::string as_string = data.substr(HEADER_SIZE_OFFSET, HEADER_SIZE_FIELD_SIZE);
             // This is in ASCII decimal representation
             const uint64_t value = std::strtoull(as_string.c_str(), nullptr, 10);
-            return value;
+
+            const uint64_t aligned = align_to_size(value, ALIGNMENT_SIZE);
+            return aligned;
         }
 
         std::string data;
+    };
+
+    struct offsets_array
+    {
+        static offsets_array read(fstream& fs, const uint32_t offset_count)
+        {
+            static const size_t OFFSET_WIDTH = 4;
+
+            std::string raw_offsets;
+            const size_t raw_offset_size = offset_count * OFFSET_WIDTH;
+            raw_offsets.resize(raw_offset_size);
+            fs.read(&raw_offsets[0], raw_offset_size);
+
+            offsets_array ret;
+            for (uint32_t i = 0; i < offset_count; ++i)
+            {
+                const std::string value_as_string = raw_offsets.substr(OFFSET_WIDTH * i, OFFSET_WIDTH * (i + 1));
+                const uint32_t value = reinterpret_bytes<uint32_t>(value_as_string.c_str());
+
+                // Ignore offsets that point to offset 0. See vcpkg github #223 #288 #292
+                if (value != 0)
+                {
+                    ret.data.push_back(value);
+                }
+            }
+
+            // Sort the offsets, because it is possible for them to be unsorted. See vcpkg github #292
+            std::sort(ret.data.begin(), ret.data.end());
+            return ret;
+        }
+
+        std::vector<uint32_t> data;
     };
 
     struct import_header
@@ -169,14 +197,6 @@ namespace vcpkg { namespace COFFFileReader
             return ret;
         }
 
-        static import_header peek(fstream& fs)
-        {
-            auto original_pos = fs.tellg().seekpos();
-            import_header ret = read(fs);
-            fs.seekg(original_pos);
-            return ret;
-        }
-
         MachineType machineType() const
         {
             static const size_t MACHINE_TYPE_OFFSET = 6;
@@ -190,14 +210,6 @@ namespace vcpkg { namespace COFFFileReader
     private:
         std::string data;
     };
-
-    static void skip_archive_member(fstream& fs, uint64_t member_size)
-    {
-        static const size_t ALIGNMENT_SIZE = 2;
-
-        const fpos_t new_offset = align_to(member_size, ALIGNMENT_SIZE);
-        fs.seekg(new_offset, ios_base::cur);
-    }
 
     static void read_and_verify_archive_file_signature(fstream& fs)
     {
@@ -222,6 +234,32 @@ namespace vcpkg { namespace COFFFileReader
         return {machine};
     }
 
+    struct marker_t
+    {
+        void set_to_offset(const fpos_t position)
+        {
+            this->m_absolute_position = position;
+        }
+
+        void set_to_current_pos(fstream& fs)
+        {
+            this->m_absolute_position = fs.tellg().seekpos();
+        }
+
+        void seek_to_marker(fstream& fs) const
+        {
+            fs.seekg(this->m_absolute_position, ios_base::beg);
+        }
+
+        void advance_by(const uint64_t offset)
+        {
+            this->m_absolute_position += offset;
+        }
+
+    private:
+        fpos_t m_absolute_position = 0;
+    };
+
     lib_info read_lib(const fs::path path)
     {
         std::fstream fs(path, std::ios::in | std::ios::binary | std::ios::ate);
@@ -229,37 +267,41 @@ namespace vcpkg { namespace COFFFileReader
 
         read_and_verify_archive_file_signature(fs);
 
+        marker_t marker;
+        marker.set_to_current_pos(fs);
+
         // First Linker Member
         const archive_member_header first_linker_member_header = archive_member_header::read(fs);
         Checks::check_exit(first_linker_member_header.name().substr(0, 2) == "/ ", "Could not find proper first linker member");
-        skip_archive_member(fs, first_linker_member_header.member_size());
+        marker.advance_by(archive_member_header::HEADER_SIZE + first_linker_member_header.member_size());
+        marker.seek_to_marker(fs);
 
         const archive_member_header second_linker_member_header = archive_member_header::read(fs);
         Checks::check_exit(second_linker_member_header.name().substr(0, 2) == "/ ", "Could not find proper second linker member");
         // The first 4 bytes contains the number of archive members
-        const uint32_t archive_member_count = peek_value_from_stream<uint32_t>(fs);
-        skip_archive_member(fs, second_linker_member_header.member_size());
+        const uint32_t archive_member_count = read_value_from_stream<uint32_t>(fs);
+        const offsets_array offsets = offsets_array::read(fs, archive_member_count);
+        marker.advance_by(archive_member_header::HEADER_SIZE + second_linker_member_header.member_size());
+        marker.seek_to_marker(fs);
 
         bool hasLongnameMemberHeader = peek_value_from_stream<uint16_t>(fs) == 0x2F2F;
         if (hasLongnameMemberHeader)
         {
             const archive_member_header longnames_member_header = archive_member_header::read(fs);
-            skip_archive_member(fs, longnames_member_header.member_size());
+            marker.advance_by(archive_member_header::HEADER_SIZE + longnames_member_header.member_size());
+            marker.seek_to_marker(fs);
         }
 
         std::set<MachineType> machine_types;
         // Next we have the obj and pseudo-object files
-        for (uint32_t i = 0; i < archive_member_count; i++)
+        for (const uint32_t offset : offsets.data)
         {
-            const archive_member_header header = archive_member_header::read(fs);
-            if (header.data[0] != '\0') // Due to freeglut. github issue #223
-            {
-                const uint16_t first_two_bytes = peek_value_from_stream<uint16_t>(fs);
-                const bool isImportHeader = getMachineType(first_two_bytes) == MachineType::UNKNOWN;
-                const MachineType machine = isImportHeader ? import_header::peek(fs).machineType() : coff_file_header::peek(fs).machineType();
-                machine_types.insert(machine);
-            }
-            skip_archive_member(fs, header.member_size());
+            marker.set_to_offset(offset + archive_member_header::HEADER_SIZE); // Skip the header, no need to read it.
+            marker.seek_to_marker(fs);
+            const uint16_t first_two_bytes = peek_value_from_stream<uint16_t>(fs);
+            const bool isImportHeader = getMachineType(first_two_bytes) == MachineType::UNKNOWN;
+            const MachineType machine = isImportHeader ? import_header::read(fs).machineType() : coff_file_header::read(fs).machineType();
+            machine_types.insert(machine);
         }
 
         return {std::vector<MachineType>(machine_types.cbegin(), machine_types.cend())};
