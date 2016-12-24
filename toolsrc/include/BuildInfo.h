@@ -4,9 +4,7 @@
 #include "Paragraphs.h"
 #include <regex>
 
-namespace fs = std::tr2::sys;
-
-namespace vcpkg
+namespace vcpkg { namespace PostBuildLint
 {
     enum class LinkageType
     {
@@ -46,8 +44,8 @@ namespace vcpkg
 
         const ConfigurationType& config() const;
         const LinkageType& linkage() const;
-        const std::regex crt_regex() const;
-        const std::string toString() const;
+        std::regex crt_regex() const;
+        std::string toString() const;
 
     private:
         BuildType(const ConfigurationType& config, const LinkageType& linkage, const std::string& crt_regex_as_string)
@@ -106,7 +104,7 @@ namespace vcpkg
 
         OutdatedDynamicCrt() = delete;
 
-        const std::regex crt_regex() const;
+        std::regex crt_regex() const;
         const std::string& toString() const;
 
     private:
@@ -128,4 +126,4 @@ namespace vcpkg
     };
 
     BuildInfo read_build_info(const fs::path& filepath);
-}
+}}
