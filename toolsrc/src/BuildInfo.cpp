@@ -2,7 +2,7 @@
 #include "vcpkg_Checks.h"
 #include "vcpkglib_helpers.h"
 
-namespace vcpkg
+namespace vcpkg { namespace PostBuildLint
 {
     const ConfigurationType& BuildType::config() const
     {
@@ -14,13 +14,13 @@ namespace vcpkg
         return this->m_linkage;
     }
 
-    const std::regex BuildType::crt_regex() const
+    std::regex BuildType::crt_regex() const
     {
         const std::regex r(this->m_crt_regex_as_string, std::regex_constants::icase);
         return r;
     }
 
-    const std::string BuildType::toString() const
+    std::string BuildType::toString() const
     {
         const std::string s = Strings::format("[%s,%s]", to_string(this->m_config), to_string(this->m_linkage));
         return s;
@@ -127,7 +127,7 @@ namespace vcpkg
     BuildInfo read_build_info(const fs::path& filepath)
     {
         const std::vector<std::unordered_map<std::string, std::string>> pghs = Paragraphs::get_paragraphs(filepath);
-        Checks::check_throw(pghs.size() == 1, "Invalid BUILD_INFO file for package");
+        Checks::check_exit(pghs.size() == 1, "Invalid BUILD_INFO file for package");
 
         return BuildInfo::create(pghs[0]);
     }
@@ -151,7 +151,7 @@ namespace vcpkg
     const OutdatedDynamicCrt OutdatedDynamicCrt::MSVCRT20_DLL = OutdatedDynamicCrt("msvcrt20.dll", R"(msvcrt20\.dll)");;
     const OutdatedDynamicCrt OutdatedDynamicCrt::MSVCRT40_DLL = OutdatedDynamicCrt("msvcrt40.dll", R"(msvcrt40\.dll)");;
 
-    const std::regex OutdatedDynamicCrt::crt_regex() const
+    std::regex OutdatedDynamicCrt::crt_regex() const
     {
         const std::regex r(this->m_crt_regex_as_string, std::regex_constants::icase);
         return r;
@@ -161,4 +161,4 @@ namespace vcpkg
     {
         return this->m_dll_name;
     }
-}
+}}
