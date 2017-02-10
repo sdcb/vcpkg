@@ -1,3 +1,136 @@
+vcpkg (0.0.71)
+--------------
+  * Add ports:
+    - atk                  2.22.0
+    - fontconfig           2.12.1
+    - opus                 1.1.4
+    - pango                1.40.3
+    - xerces-c             3.1.4
+  * Update ports:
+    - boost                1.62-11          -> 1.63
+    - cairo                1.14.6           -> 1.15.4
+    - directxtk            dec2016          -> dec2016-1
+    - fltk                 1.3.4-1          -> 1.3.4-2
+    - gdal                 1.11.3           -> 1.11.3-1
+    - harfbuzz             1.3.4            -> 1.3.4-2
+    - libarchive           3.2.2            -> 3.2.2-2
+    - libmariadb           2.3.1            -> 2.3.2
+    - mpir                 2.7.2            -> 2.7.2-1
+    - openssl              1.0.2j-2         -> 1.0.2k-2
+    - wt                   3.3.6            -> 3.3.6-2
+  * Improve `vcpkg remove`:
+     - Now shows all dependencies that need to be removed instead of just the immediate dependencies
+     - Add `--recurse` option that removes all dependencies
+     - Improve messages
+  * Improve support for Visual Studio 2017
+    - Better VS2017 detection
+    - Fixed various issues with `bootstrap.ps1` and VS2017 support
+  * Fix `vcpkg_copy_pdbs()` under non-English locale
+  * Notable changes for buiding the `vcpkg` tool:
+    - Restructure `vcpkg` project hierarchy. Now only has 4 projects (down from 6). Most of the code now lives under vcpkglib.vcxproj
+    - Enable multiprocessor compilation
+    - Disable MinimalRebuild
+    - Use precompiled headers
+  * Fixes and improvements in existing portfiles and the `vcpkg` tool itself
+
+-- vcpkg team <vcpkg@microsoft.com>  MON, 30 Jan 2017 23:00:00 -0800
+
+
+vcpkg (0.0.70)
+--------------
+  * Add ports:
+    - fltk                 1.3.4-1
+    - glib                 2.50.2
+    - lzo                  2.09
+    - uvatlas              sept2016
+  * Update ports:
+    - dx                   1.0.0            -> 1.0.1
+    - libmysql             5.7.16           -> 5.7.17
+  * Add support for Visual Studio 2017
+    - Previously, you could use Visual Studio 2017 for your own application and `vcpkg` integration would work, but you needed to have Visual Studio 2015 to build `vcpkg` itself as well as the libraries. This requirement has now been removed
+    - If both Visual Studio 2015 and Visual Studio 2017 are installed, Visual Studio 2017 tools will be preferred over those of Visual Studio 2015
+  * Bump required version & auto-downloaded version of `cmake` to 3.7.2 (was 3.5.x), which includes generators for Visual Studio 2017
+  * Bump auto-downloaded version of `nuget` to 3.5.0 (was 3.4.3)
+  * Bump auto-downloaded version of `git` to 2.11.0 (was 2.8.3)
+  * Fixes and improvements in existing portfiles and the `vcpkg` tool itself
+
+-- vcpkg team <vcpkg@microsoft.com>  MON, 23 Jan 2017 19:50:00 -0800
+
+
+vcpkg (0.0.67)
+--------------
+  * Add ports:
+    - cereal               1.2.1
+    - directxmesh          oct2016
+    - directxtex           dec2016
+    - metis                5.1.0
+    - sdl2-image           2.0.1
+    - szip                 2.1
+  * Update ports:
+    - ace                  6.4.0            -> 6.4.2
+    - boost                1.62-9           -> 1.62-11
+    - curl                 7.51.0-2         -> 7.51.0-3
+    - directxtk            oct2016-1        -> dec2016
+    - directxtk12          oct2016          -> dec2016
+    - freetype             2.6.3-3          -> 2.6.3-4
+    - glew                 2.0.0            -> 2.0.0-1
+    - grpc                 1.1.0-dev-1674f65 -> 1.1.0-dev-1674f65-1
+    - http-parser          2.7.1            -> 2.7.1-1
+    - libssh2              1.8.0            -> 1.8.0-1
+    - libwebsockets        2.0.0            -> 2.0.0-1
+    - openssl              1.0.2j-1         -> 1.0.2j-2
+    - tiff                 4.0.6-1          -> 4.0.6-2
+    - zlib                 1.2.10           -> 1.2.11
+  * Add 7z to `vcpkg_find_acquire_program.cmake`
+  * Enhance `vcpkg_build_cmake.cmake` and `vcpkg_install_cmake.cmake`:
+    - Add option to disable parallel building (it is enabled by default)
+    - Add option to use the 64-bit toolset (for the 32-bit builds; output binaries are still 32-bit)
+  * Fix bug in `applocal.ps1` that would infinitely recurse when there were no depenndencies
+  * Fixes and improvements in existing portfiles and the `vcpkg` tool itself
+
+-- vcpkg team <vcpkg@microsoft.com>  WED, 18 Jan 2017 13:45:00 -0800
+
+
+vcpkg (0.0.66)
+--------------
+  * Add ports:
+    - antlr4               4.6
+    - bzip2                1.0.6
+    - dx                   1.0.0
+    - gli                  0.8.2
+    - libarchive           3.2.2
+    - libffi               3.1
+    - liblzma              5.2.2
+    - libmodplug           0.8.8.5-bb25b05
+    - libsigcpp            2.10
+    - lmdb                 0.9.18-1
+    - lz4                  1.7.4.2
+    - ogre                 1.9.0
+    - qwt                  6.1.3
+    - smpeg2               2.0.0
+    - spirv-tools          1.1-f72189c249ba143c6a89a4cf1e7d53337b2ddd40
+  * Update ports:
+    - aws-sdk-cpp          1.0.34-1         -> 1.0.47
+    - azure-storage-cpp    2.5.0            -> 2.6.0
+    - boost                1.62-8           -> 1.62-9
+    - chakracore           1.3.1            -> 1.4.0
+    - freetype             2.6.3-2          -> 2.6.3-3
+    - icu                  58.1             -> 58.2-1
+    - libbson              1.5.0-rc6        -> 1.5.1
+    - libvorbis                             -> 1.3.5-143caf4023a90c09a5eb685fdd46fb9b9c36b1ee
+    - lua                  5.3.3-1          -> 5.3.3-2
+    - mongo-c-driver       1.5.0-rc6        -> 1.5.1
+    - pixman               0.34.0           -> 0.34.0-1
+    - qt5                  5.7-1            -> 5.7.1-2
+    - sdl2                 2.0.5            -> 2.0.5-2
+    - zlib                 1.2.8            -> 1.2.10
+  * Improvements in pre-install checks:
+    - Refactor file-exists-check. Improved clarity and performance.
+  * Fixes and improvements in existing portfiles and the `vcpkg` tool itself
+
+-- vcpkg team <vcpkg@microsoft.com>  TUE, 10 Jan 2017 17:15:00 -0800
+
+
 vcpkg (0.0.65)
 --------------
   * Add ports:

@@ -1,13 +1,14 @@
+#include "pch.h"
 #include "vcpkg_Commands.h"
-#include "vcpkg.h"
+#include "vcpkglib.h"
 #include "vcpkg_System.h"
 #include "vcpkg_Files.h"
 #include "Paragraphs.h"
 #include "vcpkg_info.h"
 
-namespace vcpkg
+namespace vcpkg::Commands::Update
 {
-    void update_command(const vcpkg_cmd_arguments& args, const vcpkg_paths& paths)
+    void perform_and_exit(const vcpkg_cmd_arguments& args, const vcpkg_paths& paths)
     {
         args.check_exact_arg_count(0);
         System::println("Using local portfile versions. To update the local portfiles, use `git pull`.");
@@ -84,7 +85,7 @@ namespace vcpkg
             {
                 if (maj1 != maj2 || min1 != min2 || rev1 != rev2)
                 {
-                    System::println("Different source is available for vcpkg (%d.%d.%d -> %d.%d.%d). Use scripts\\bootstrap.ps1 to update.",
+                    System::println("Different source is available for vcpkg (%d.%d.%d -> %d.%d.%d). Use powershell -exec bypass scripts/bootstrap.ps1 to update.",
                                     maj2, min2, rev2,
                                     maj1, min1, rev1);
                 }

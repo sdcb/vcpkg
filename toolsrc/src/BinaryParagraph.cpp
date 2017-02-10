@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "BinaryParagraph.h"
 #include "vcpkglib_helpers.h"
 #include "vcpkg_Checks.h"
@@ -70,7 +71,7 @@ namespace vcpkg
 
     std::string BinaryParagraph::displayname() const
     {
-        return Strings::format("%s:%s", this->spec.name(), this->spec.target_triplet());
+        return this->spec.display_name();
     }
 
     std::string BinaryParagraph::dir() const

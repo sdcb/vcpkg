@@ -12,7 +12,7 @@ vcpkg_find_acquire_program(PYTHON3)
 get_filename_component(PERL_EXE_PATH ${PERL} DIRECTORY)
 get_filename_component(PYTHON3_EXE_PATH ${PYTHON3} DIRECTORY)
 get_filename_component(JOM_EXE_PATH ${JOM} DIRECTORY)
-set(ENV{PATH} "${JOM_EXE_PATH};${PYTHON3_EXE_PATH};${PERL_EXE_PATH};$ENV{PATH}")
+set(ENV{PATH} "${JOM_EXE_PATH};${PYTHON3_EXE_PATH};$ENV{PATH};${PERL_EXE_PATH}")
 set(ENV{INCLUDE} "${CURRENT_INSTALLED_DIR}/include;$ENV{INCLUDE}")
 set(ENV{LIB} "${CURRENT_INSTALLED_DIR}/lib;$ENV{LIB}")
 vcpkg_download_distfile(ARCHIVE_FILE
@@ -32,11 +32,13 @@ if(DEFINED VCPKG_CRT_LINKAGE AND VCPKG_CRT_LINKAGE STREQUAL static)
     vcpkg_apply_patches(
         SOURCE_PATH ${SOURCE_PATH}
         PATCHES "${CMAKE_CURRENT_LIST_DIR}/set-static-qmakespec.patch"
+        QUIET
     )
 else()
     vcpkg_apply_patches(
         SOURCE_PATH ${SOURCE_PATH}
         PATCHES "${CMAKE_CURRENT_LIST_DIR}/set-shared-qmakespec.patch"
+        QUIET
     )
 endif()
 

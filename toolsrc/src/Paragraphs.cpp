@@ -1,7 +1,8 @@
+#include "pch.h"
 #include "Paragraphs.h"
 #include "vcpkg_Files.h"
 
-namespace vcpkg { namespace Paragraphs
+namespace vcpkg::Paragraphs
 {
     struct Parser
     {
@@ -41,8 +42,8 @@ namespace vcpkg { namespace Paragraphs
         static bool is_alphanum(char ch)
         {
             return (ch >= 'A' && ch <= 'Z')
-                || (ch >= 'a' && ch <= 'z')
-                || (ch >= '0' && ch <= '9');
+                   || (ch >= 'a' && ch <= 'z')
+                   || (ch >= '0' && ch <= '9');
         }
 
         static bool is_lineend(char ch)
@@ -153,11 +154,17 @@ namespace vcpkg { namespace Paragraphs
 
     std::vector<std::unordered_map<std::string, std::string>> get_paragraphs(const fs::path& control_path)
     {
-        return parse_paragraphs(Files::read_contents(control_path).get_or_throw());
+        const expected<std::string> contents = Files::read_contents(control_path);
+        if (auto spgh = contents.get())
+        {
+            return parse_paragraphs(*spgh);
+        }
+
+        Checks::exit_with_message("Error while reading %s: %s", control_path.generic_string(), contents.error_code().message());
     }
 
     std::vector<std::unordered_map<std::string, std::string>> parse_paragraphs(const std::string& str)
     {
         return Parser(str.c_str(), str.c_str() + str.size()).get_paragraphs();
     }
-}}
+}

@@ -4,13 +4,14 @@ function(vcpkg_find_acquire_program VAR)
   endif()
 
   unset(NOEXTRACT)
+  unset(SUBDIR)
 
   if(VAR MATCHES "PERL")
     set(PROGNAME perl)
     set(PATHS ${DOWNLOADS}/tools/perl/perl/bin)
-    set(URL "http://strawberryperl.com/download/5.20.2.1/strawberry-perl-5.20.2.1-64bit-portable.zip")
-    set(ARCHIVE "strawberry-perl-5.20.2.1-64bit-portable.zip")
-    set(HASH 6e14e5580e52da5d35f29b67a52ef9db0e021af1575b4bbd84ebdbf18580522287890bdc21c0d21ddc1b2529d888f8e159dcaa017a3ff06d8fd23d16901bcc8b)
+    set(URL "http://strawberryperl.com/download/5.24.1.1/strawberry-perl-5.24.1.1-32bit-portable.zip")
+    set(ARCHIVE "strawberry-perl-5.24.1.1-32bit-portable.zip")
+    set(HASH a6e685ea24376f50db5f06c5b46075f1d3be25168fa1f27fa9b02e2ac017826cee62a2b43562f9b6c989337a231ba914416c110075457764de2d11f99d5e0f26)
   elseif(VAR MATCHES "NASM")
     set(PROGNAME nasm)
     set(PATHS ${DOWNLOADS}/tools/nasm/nasm-2.11.08)
@@ -46,8 +47,7 @@ function(vcpkg_find_acquire_program VAR)
         endif()
     endif()
     if(PYTHON2 MATCHES "NOTFOUND")
-        message(FATAL_ERROR "libuv uses the GYP build system, which requires Python 2.7.\n"
-        "Python 2.7 was not found in the path or by searching inside C:\\Python27.\n"
+        message(FATAL_ERROR "Python 2.7 was not found in the path or by searching inside C:\\Python27.\n"
         "There is no portable redistributable for Python 2.7, so you will need to install the MSI located at:\n"
         "    https://www.python.org/ftp/python/2.7.11/python-2.7.11.amd64.msi\n"
         )
@@ -58,6 +58,19 @@ function(vcpkg_find_acquire_program VAR)
     set(URL "http://download.qt.io/official_releases/jom/jom_1_1_1.zip")
     set(ARCHIVE "jom_1_1_1.zip")
     set(HASH 23a26dc7e29979bec5dcd3bfcabf76397b93ace64f5d46f2254d6420158bac5eff1c1a8454e3427e7a2fe2c233c5f2cffc87b376772399e12e40b51be2c065f4)
+  elseif(VAR MATCHES "7Z")
+    set(PROGNAME 7z)
+    set(PATHS "C:/Program Files/7-Zip" ${DOWNLOADS}/tools/7z/Files/7-Zip)
+    set(URL "http://7-zip.org/a/7z1604.msi")
+    set(ARCHIVE "7z1604.msi")
+    set(HASH 556f95f7566fe23704d136239e4cf5e2a26f939ab43b44145c91b70d031a088d553e5c21301f1242a2295dcde3143b356211f0108c68e65eef8572407618326d)
+  elseif(VAR MATCHES "NINJA")
+    set(PROGNAME ninja)
+    set(SUBDIR "ninja-1.7.2")
+    set(PATHS ${DOWNLOADS}/tools/ninja/${SUBDIR})
+    set(URL "https://github.com/ninja-build/ninja/releases/download/v1.7.2/ninja-win.zip")
+    set(ARCHIVE "ninja-win.zip")
+    set(HASH cccab9281b274c564f9ad77a2115be1f19be67d7b2ee14a55d1db1b27f3b68db8e76076e4f804b61eb8e573e26a8ecc9985675a8dcf03fd7a77b7f57234f1393) 
   else()
     message(FATAL "unknown tool ${VAR} -- unable to acquire.")
   endif()
@@ -68,14 +81,25 @@ function(vcpkg_find_acquire_program VAR)
       EXPECTED_HASH SHA512=${HASH}
       SHOW_PROGRESS
     )
-    file(MAKE_DIRECTORY ${DOWNLOADS}/tools/${PROGNAME})
+    file(MAKE_DIRECTORY ${DOWNLOADS}/tools/${PROGNAME}/${SUBDIR})
     if(DEFINED NOEXTRACT)
-      file(COPY ${DOWNLOADS}/${ARCHIVE} DESTINATION ${DOWNLOADS}/tools/${PROGNAME})
+      file(COPY ${DOWNLOADS}/${ARCHIVE} DESTINATION ${DOWNLOADS}/tools/${PROGNAME}/${SUBDIR})
     else()
-      execute_process(
-        COMMAND ${CMAKE_COMMAND} -E tar xzf ${DOWNLOADS}/${ARCHIVE}
-        WORKING_DIRECTORY ${DOWNLOADS}/tools/${PROGNAME}
-      )
+      get_filename_component(ARCHIVE_EXTENSION ${ARCHIVE} EXT)
+      string(TOLOWER "${ARCHIVE_EXTENSION}" ARCHIVE_EXTENSION)
+      if(${ARCHIVE_EXTENSION} STREQUAL ".msi")
+        file(TO_NATIVE_PATH "${DOWNLOADS}/${ARCHIVE}" ARCHIVE_NATIVE_PATH)
+        file(TO_NATIVE_PATH "${DOWNLOADS}/tools/${PROGNAME}/${SUBDIR}" DESTINATION_NATIVE_PATH)
+        execute_process(
+          COMMAND msiexec /a ${ARCHIVE_NATIVE_PATH} /qn TARGETDIR=${DESTINATION_NATIVE_PATH}
+          WORKING_DIRECTORY ${DOWNLOADS}
+        )
+      else()
+        execute_process(
+          COMMAND ${CMAKE_COMMAND} -E tar xzf ${DOWNLOADS}/${ARCHIVE}
+          WORKING_DIRECTORY ${DOWNLOADS}/tools/${PROGNAME}/${SUBDIR}
+        )
+      endif()
     endif()
 
     find_program(${VAR} ${PROGNAME} PATHS ${PATHS})
